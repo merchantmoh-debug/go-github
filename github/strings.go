@@ -35,7 +35,9 @@ func stringifyValue(w *bytes.Buffer, val reflect.Value) {
 
 	switch v.Kind() {
 	case reflect.String:
-		fmt.Fprintf(w, `"%v"`, v)
+		w.WriteByte('"')
+		w.WriteString(v.String())
+		w.WriteByte('"')
 	case reflect.Slice:
 		w.WriteByte('[')
 		for i := range v.Len() {
