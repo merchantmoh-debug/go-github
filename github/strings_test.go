@@ -81,6 +81,46 @@ func TestStringify(t *testing.T) {
 	}
 }
 
+func TestStringify_Primitives(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		in  any
+		out string
+	}{
+		// Bool
+		{true, "true"},
+		{false, "false"},
+
+		// Int variants
+		{int(1), "1"},
+		{int8(2), "2"},
+		{int16(3), "3"},
+		{int32(4), "4"},
+		{int64(5), "5"},
+
+		// Uint variants
+		{uint(6), "6"},
+		{uint8(7), "7"},
+		{uint16(8), "8"},
+		{uint32(9), "9"},
+		{uint64(10), "10"},
+		{uintptr(11), "11"},
+
+		// Float variants
+		{float32(1.1), "1.1"},
+		{float64(1.1), "1.1"},
+		{float32(1.0000001), "1.0000001"},
+		{float64(1.000000000000001), "1.000000000000001"},
+	}
+
+	for i, tt := range tests {
+		s := Stringify(tt.in)
+		if s != tt.out {
+			t.Errorf("%d. Stringify(%T) => %q, want %q", i, tt.in, s, tt.out)
+		}
+	}
+}
+
 // Directly test the String() methods on various GitHub types. We don't do an
 // exhaustive test of all the various field types, since TestStringify() above
 // takes care of that. Rather, we just make sure that Stringify() is being
