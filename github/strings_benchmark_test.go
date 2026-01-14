@@ -1,8 +1,3 @@
-// Copyright 2013 The go-github AUTHORS. All rights reserved.
-//
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package github
 
 import (
@@ -31,7 +26,26 @@ func BenchmarkStringify(b *testing.B) {
 		Pointer: &val,
 	}
 	b.ResetTimer()
-	for range b.N { //nolint:modernize // b.Loop() requires Go 1.24
+	for i := 0; i < b.N; i++ {
 		Stringify(s)
+	}
+}
+
+func TestStringify_Floats(t *testing.T) {
+	tests := []struct {
+		in  any
+		out string
+	}{
+		{float32(1.1), "1.1"},
+		{float64(1.1), "1.1"},
+		{float32(1.0000001), "1.0000001"},
+		{struct{ F float32 }{1.1}, "{F:1.1}"},
+	}
+
+	for i, tt := range tests {
+		s := Stringify(tt.in)
+		if s != tt.out {
+			t.Errorf("%d. Stringify(%v) = %q, want %q", i, tt.in, s, tt.out)
+		}
 	}
 }
