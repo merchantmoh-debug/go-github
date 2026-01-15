@@ -111,6 +111,18 @@ func TestStringify_Primitives(t *testing.T) {
 		{float64(1.1), "1.1"},
 		{float32(1.0000001), "1.0000001"},
 		{float64(1.000000000000001), "1.000000000000001"},
+
+		// Boundary Cases
+		{int8(-128), "-128"},
+		{int8(127), "127"},
+		{uint64(18446744073709551615), "18446744073709551615"},
+
+		// String Optimization
+		{"hello", `"hello"`},
+		{"", `""`},
+
+		// Struct with float
+		{struct{ F float32 }{1.1}, "{F:1.1}"},
 	}
 
 	for i, tt := range tests {
@@ -180,26 +192,6 @@ func TestString(t *testing.T) {
 		s := tt.in.(fmt.Stringer).String()
 		if s != tt.out {
 			t.Errorf("%v. String() => %q, want %q", i, tt.in, tt.out)
-		}
-	}
-}
-
-func TestStringify_Floats(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		in  any
-		out string
-	}{
-		{float32(1.1), "1.1"},
-		{float64(1.1), "1.1"},
-		{float32(1.0000001), "1.0000001"},
-		{struct{ F float32 }{1.1}, "{F:1.1}"},
-	}
-
-	for i, tt := range tests {
-		s := Stringify(tt.in)
-		if s != tt.out {
-			t.Errorf("%v. Stringify(%v) = %q, want %q", i, tt.in, s, tt.out)
 		}
 	}
 }
