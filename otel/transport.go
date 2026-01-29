@@ -2,7 +2,7 @@
 //
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-//
+
 // Package otel provides OpenTelemetry instrumentation for go-github.
 package otel
 
@@ -11,13 +11,14 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/google/go-github/v82/github"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/google/go-github/v82/github"
 )
 
 const (
@@ -38,19 +39,16 @@ func NewTransport(base http.RoundTripper, opts ...Option) *Transport {
 	if base == nil {
 		base = http.DefaultTransport
 	}
-
 	t := &Transport{Base: base}
 	for _, opt := range opts {
 		opt(t)
 	}
-
 	if t.Tracer == nil {
 		t.Tracer = otel.Tracer(instrumentationName)
 	}
 	if t.Meter == nil {
 		t.Meter = otel.Meter(instrumentationName)
 	}
-
 	return t
 }
 
@@ -58,21 +56,17 @@ func NewTransport(base http.RoundTripper, opts ...Option) *Transport {
 func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	ctx := req.Context()
 	spanName := fmt.Sprintf("github/%v", req.Method)
-
 	// Start Span
 	ctx, span := t.Tracer.Start(ctx, spanName, trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
-
 	// Inject Attributes
 	span.SetAttributes(
 		attribute.String("http.method", req.Method),
 		attribute.String("http.url", req.URL.String()),
 		attribute.String("http.host", req.URL.Host),
 	)
-
 	// Inject Propagation Headers
 	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(req.Header))
-
 	// Execute Request
 	resp, err := t.Base.RoundTrip(req)
 	if err != nil {
@@ -80,10 +74,8 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
-
 	// Capture response attributes
 	span.SetAttributes(attribute.Int("http.status_code", resp.StatusCode))
-
 	// Capture GitHub Specifics
 	if limit := resp.Header.Get(github.HeaderRateLimit); limit != "" {
 		if v, err := strconv.Atoi(limit); err == nil {
@@ -104,13 +96,11 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if resource := resp.Header.Get(github.HeaderRateResource); resource != "" {
 		span.SetAttributes(attribute.String("github.rate_limit.resource", resource))
 	}
-
 	if resp.StatusCode >= 400 {
 		span.SetStatus(codes.Error, fmt.Sprintf("HTTP %v", resp.StatusCode))
 	} else {
 		span.SetStatus(codes.Ok, "OK")
 	}
-
 	return resp, nil
 }
 
