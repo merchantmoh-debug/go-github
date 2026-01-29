@@ -83,30 +83,18 @@ const (
 	mediaTypeSCIM = "application/scim+json"
 
 	// Media Type values to access preview APIs.
-
 	// These media types will be added to the API request as headers
-
 	// and used to enable particular features on GitHub API that are still in preview.
-
 	// After some time, specific media types will be promoted (to a "stable" state).
-
 	// From then on, the preview headers are not required anymore to activate the additional
-
 	// feature on GitHub.com's API. However, this API header might still be needed for users
-
 	// to run a GitHub Enterprise Server on-premise.
-
 	// It's not uncommon for GitHub Enterprise Server customers to run older versions which
-
 	// would probably rely on the preview headers for some time.
-
 	// While the header promotion is going out for GitHub.com, it may be some time before it
-
 	// even arrives in GitHub Enterprise Server.
-
 	// We keep those preview headers around to avoid breaking older GitHub Enterprise Server
-
-	// versions. Additionally, non-functional (preview) headers don't create any side effects
+	// versions. Additionally, non-functional (preview) headers don't create any side effects.
 
 	// on GitHub Cloud version.
 
@@ -1420,10 +1408,9 @@ type requestContext uint8
 
 const (
 
-	// BypassRateLimitCheck prevents a pre-emptive check for exceeded primary rate limits
-
+	// BypassRateLimitCheck prevents a pre-emptive check for exceeded primary rate limits.
 	// Specify this by providing a context with this key, e.g.
-
+	//
 	//   context.WithValue(context.Background(), github.BypassRateLimitCheck, true)
 
 	BypassRateLimitCheck requestContext = iota

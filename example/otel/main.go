@@ -1,4 +1,4 @@
-// Copyright 2026 The go-github Authors. All rights reserved.
+// Copyright 2026 The go-github AUTHORS. All rights reserved.
 
 // Use of this source code is governed by a BSD-style
 
@@ -65,7 +65,7 @@ func main() {
 
 	// Make a request (Get Rate Limits is public and cheap)
 
-	limits, resp, err := client.RateLimitService.Get(context.Background())
+	limits, resp, err := client.RateLimit.Get(context.Background())
 
 	if err != nil {
 
