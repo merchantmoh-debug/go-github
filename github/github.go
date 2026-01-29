@@ -1459,6 +1459,7 @@ func GetRateLimitCategory(method, path string) RateLimitCategory {
 func (c *Client) RateLimits(ctx context.Context) (*RateLimits, *Response, error) {
 	return c.RateLimit.Get(ctx)
 }
+
 func setCredentialsAsHeaders(req *http.Request, id, secret string) *http.Request {
 	// To set extra headers, we must make a copy of the Request so
 	// that we don't modify the Request we were given. This is required by the
@@ -1522,6 +1523,7 @@ func (t *UnauthenticatedRateLimitedTransport) RoundTrip(req *http.Request) (*htt
 func (t *UnauthenticatedRateLimitedTransport) Client() *http.Client {
 	return &http.Client{Transport: t}
 }
+
 func (t *UnauthenticatedRateLimitedTransport) transport() http.RoundTripper {
 	if t.Transport != nil {
 		return t.Transport
@@ -1556,6 +1558,7 @@ func (t *BasicAuthTransport) RoundTrip(req *http.Request) (*http.Response, error
 func (t *BasicAuthTransport) Client() *http.Client {
 	return &http.Client{Transport: t}
 }
+
 func (t *BasicAuthTransport) transport() http.RoundTripper {
 	if t.Transport != nil {
 		return t.Transport
@@ -1585,6 +1588,7 @@ func formatRateReset(d time.Duration) string {
 	}
 	return fmt.Sprintf("[rate reset in %v]", timeString)
 }
+
 func sleepUntilResetWithBuffer(ctx context.Context, reset time.Time) error {
 	buffer := time.Second
 	timer := time.NewTimer(time.Until(reset) + buffer)

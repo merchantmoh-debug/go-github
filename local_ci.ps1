@@ -2,17 +2,18 @@
 $ErrorActionPreference = "Stop"
 # Toolchain Paths
 $GO_BIN = "C:\Users\Stran\go\pkg\mod\golang.org\toolchain@v0.0.1-go1.24.0.windows-amd64\bin\go.exe"
-$GOFMT_BIN = "C:\Users\Stran\go\pkg\mod\golang.org\toolchain@v0.0.1-go1.24.0.windows-amd64\bin\gofmt.exe"
+# Use GOFUMPT strictly instead of GOFMT
+$GOFUMPT_BIN = "C:\Users\Stran\go\bin\gofumpt.exe"
 # Local Bin Paths
 $GCI_BIN = "C:\Users\Stran\go\bin\gci.exe"
 
 Write-Host "[START] Local CI Simulation (Strict Mode)..." -ForegroundColor Cyan
 
-# 1. Formatting Check (gofmt)
-Write-Host "[CHECK] Formatting (gofmt)..." -ForegroundColor Yellow
-$fmtOut = & $GOFMT_BIN -l .
+# 1. Formatting Check (gofumpt) - STRICTER than gofmt
+Write-Host "[CHECK] Formatting (gofumpt)..." -ForegroundColor Yellow
+$fmtOut = & $GOFUMPT_BIN -l .
 if ($fmtOut) {
-    Write-Host "[FAIL] Formatting errors found:" -ForegroundColor Red
+    Write-Host "[FAIL] Formatting errors found (Gofumpt Strictness):" -ForegroundColor Red
     $fmtOut
     exit 1
 }
@@ -21,8 +22,6 @@ Write-Host "[PASS] Formatting OK." -ForegroundColor Green
 # 2. Import Sorting Check (gci)
 Write-Host "[CHECK] Import Sorting (gci)..." -ForegroundColor Yellow
 if (Test-Path $GCI_BIN) {
-    # Check only Go files, ignore vendor/modules if present
-    # Using relative paths for folders to inspect
     $gciOut = & $GCI_BIN diff -s standard -s default -s "Prefix(github.com/google/go-github/v82)" github otel example
     if ($gciOut) {
         Write-Host "[FAIL] Import sorting errors found:" -ForegroundColor Red
