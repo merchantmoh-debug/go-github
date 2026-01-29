@@ -37,11 +37,12 @@ const (
 	uploadBaseURL     = "https://uploads.github.com/"
 
 	headerAPIVersion    = "X-Github-Api-Version"
-	headerRateLimit     = "X-Ratelimit-Limit"
-	headerRateRemaining = "X-Ratelimit-Remaining"
-	headerRateUsed      = "X-Ratelimit-Used"
+	HeaderRateLimit     = "X-Ratelimit-Limit"
+	HeaderRateRemaining = "X-Ratelimit-Remaining"
+	HeaderRateUsed      = "X-Ratelimit-Used"
 	HeaderRateReset     = "X-Ratelimit-Reset"
-	headerRateResource  = "X-Ratelimit-Resource"
+	HeaderRateResource  = "X-Ratelimit-Resource"
+	HeaderGitHubRequestID = "X-Github-Request-Id"
 	headerOTP           = "X-Github-Otp"
 	headerRetryAfter    = "Retry-After"
 
@@ -785,13 +786,13 @@ func (r *Response) populatePageValues() {
 // parseRate parses the rate related headers.
 func parseRate(r *http.Response) Rate {
 	var rate Rate
-	if limit := r.Header.Get(headerRateLimit); limit != "" {
+	if limit := r.Header.Get(HeaderRateLimit); limit != "" {
 		rate.Limit, _ = strconv.Atoi(limit)
 	}
-	if remaining := r.Header.Get(headerRateRemaining); remaining != "" {
+	if remaining := r.Header.Get(HeaderRateRemaining); remaining != "" {
 		rate.Remaining, _ = strconv.Atoi(remaining)
 	}
-	if used := r.Header.Get(headerRateUsed); used != "" {
+	if used := r.Header.Get(HeaderRateUsed); used != "" {
 		rate.Used, _ = strconv.Atoi(used)
 	}
 	if reset := r.Header.Get(HeaderRateReset); reset != "" {
@@ -799,7 +800,7 @@ func parseRate(r *http.Response) Rate {
 			rate.Reset = Timestamp{time.Unix(v, 0)}
 		}
 	}
-	if resource := r.Header.Get(headerRateResource); resource != "" {
+	if resource := r.Header.Get(HeaderRateResource); resource != "" {
 		rate.Resource = resource
 	}
 	return rate
@@ -1451,7 +1452,7 @@ func CheckResponse(r *http.Response) error {
 	switch {
 	case r.StatusCode == http.StatusUnauthorized && strings.HasPrefix(r.Header.Get(headerOTP), "required"):
 		return (*TwoFactorAuthError)(errorResponse)
-	case r.StatusCode == http.StatusForbidden && r.Header.Get(headerRateRemaining) == "0":
+	case r.StatusCode == http.StatusForbidden && r.Header.Get(HeaderRateRemaining) == "0":
 		return &RateLimitError{
 			Rate:     parseRate(r),
 			Response: errorResponse.Response,

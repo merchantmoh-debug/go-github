@@ -80,12 +80,12 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	span.SetAttributes(attribute.Int("http.status_code", resp.StatusCode))
 	
 	// Capture GitHub Specifics
-	if limit := resp.Header.Get("X-Ratelimit-Limit"); limit != "" {
+	if limit := resp.Header.Get(github.HeaderRateLimit); limit != "" {
 		if v, err := strconv.Atoi(limit); err == nil {
 			span.SetAttributes(attribute.Int("github.rate_limit.limit", v))
 		}
 	}
-	if remaining := resp.Header.Get("X-Ratelimit-Remaining"); remaining != "" {
+	if remaining := resp.Header.Get(github.HeaderRateRemaining); remaining != "" {
 		if v, err := strconv.Atoi(remaining); err == nil {
 			span.SetAttributes(attribute.Int("github.rate_limit.remaining", v))
 		}
@@ -93,10 +93,10 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if reset := resp.Header.Get(github.HeaderRateReset); reset != "" {
 		span.SetAttributes(attribute.String("github.rate_limit.reset", reset))
 	}
-	if reqID := resp.Header.Get("X-Github-Request-Id"); reqID != "" {
+	if reqID := resp.Header.Get(github.HeaderGitHubRequestID); reqID != "" {
 		span.SetAttributes(attribute.String("github.request_id", reqID))
 	}
-	if resource := resp.Header.Get("X-Ratelimit-Resource"); resource != "" {
+	if resource := resp.Header.Get(github.HeaderRateResource); resource != "" {
 		span.SetAttributes(attribute.String("github.rate_limit.resource", resource))
 	}
 
