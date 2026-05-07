@@ -554,6 +554,12 @@ func WithVersion(version string) RequestOption {
 	}
 }
 
+var requestBufferPool = sync.Pool{
+	New: func() any {
+		return new(bytes.Buffer)
+	},
+}
+
 // NewRequest creates an API request. A relative URL can be provided in urlStr,
 // in which case it is resolved relative to the BaseURL of the Client.
 // Relative URLs should always be specified without a preceding slash. If
@@ -573,18 +579,27 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body any
 		return nil, err
 	}
 
-	var buf io.ReadWriter
+	var reqBody io.Reader
 	if body != nil {
-		buf = &bytes.Buffer{}
+		buf := requestBufferPool.Get().(*bytes.Buffer)
 		enc := json.NewEncoder(buf)
 		enc.SetEscapeHTML(false)
 		err := enc.Encode(body)
 		if err != nil {
+			buf.Reset()
+			requestBufferPool.Put(buf)
 			return nil, err
 		}
+
+		b := make([]byte, buf.Len())
+		copy(b, buf.Bytes())
+		reqBody = bytes.NewReader(b)
+
+		buf.Reset()
+		requestBufferPool.Put(buf)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, u.String(), buf)
+	req, err := http.NewRequestWithContext(ctx, method, u.String(), reqBody)
 	if err != nil {
 		return nil, err
 	}
@@ -1114,12 +1129,17 @@ func (c *Client) Do(req *http.Request, v any) (*Response, error) {
 	case io.Writer:
 		_, err = io.Copy(v, resp.Body)
 	default:
-		decErr := json.NewDecoder(resp.Body).Decode(v)
-		if decErr == io.EOF {
-			decErr = nil // ignore EOF errors caused by empty response body
-		}
-		if decErr != nil {
-			err = decErr
+		data, readErr := io.ReadAll(resp.Body)
+		if readErr != nil {
+			err = readErr
+		} else if len(data) > 0 {
+			decErr := json.Unmarshal(data, v)
+			if decErr != nil && len(bytes.TrimSpace(data)) == 0 {
+				decErr = nil // ignore errors caused by empty response body
+			}
+			if decErr != nil {
+				err = decErr
+			}
 		}
 	}
 	return resp, err
